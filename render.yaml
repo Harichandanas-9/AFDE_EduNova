@@ -1,3 +1,9 @@
+# Render Blueprint for EduNova AI
+# https://render.com/docs/blueprint-spec
+#
+# Click "New + -> Blueprint" in the Render dashboard, point at this repo,
+# and Render provisions all three resources below in one shot.
+
 services:
   # ----------------------- Backend (FastAPI) -----------------------
   - type: web
@@ -5,9 +11,13 @@ services:
     runtime: python
     rootDir: backend
     plan: free
+    # The app's LangGraph & DeepEval features have built-in fallbacks
+    # so we keep the install lean. Append `-r requirements-full.txt`
+    # if you want the real LangGraph + DeepEval stack (heavier build).
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     autoDeploy: true
+    healthCheckPath: /api/v1/health
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
@@ -18,11 +28,13 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: LLM_PROVIDER
+        # "openai" if you provide OPENAI_API_KEY below, otherwise
+        # the app falls back to the deterministic mock provider.
         value: openai
       - key: OPENAI_API_KEY
-        sync: false
+        sync: false                       # paste in dashboard after deploy
       - key: GEMINI_API_KEY
-        sync: false
+        sync: false                       # optional
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
@@ -30,13 +42,22 @@ services:
           name: edunova-db
           property: connectionString
       - key: CORS_ORIGINS
+        # IMPORTANT: replace with your real frontend URL after first deploy.
         value: '["https://edunova-frontend.onrender.com","http://localhost:5173"]'
       - key: DEEPEVAL_ENABLED
-        value: "true"
+        # `true` only works if you also install requirements-full.txt;
+        # the heuristic fallback runs either way.
+        value: "false"
       - key: DEEPEVAL_THRESHOLD
         value: "0.6"
+      - key: DEEPEVAL_MAX_RETRIES
+        value: "2"
+      - key: RATE_LIMIT_REQUESTS
+        value: "60"
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: "60"
 
-  # ----------------------- Frontend (Vite static) -----------------------
+  # ----------------------- Frontend (Vite static site) -----------------------
   - type: web
     name: edunova-frontend
     runtime: static
@@ -45,13 +66,16 @@ services:
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     autoDeploy: true
-    pullRequestPreviewsEnabled: true
+    # SPA rewrite — let React Router handle deep links instead of 404ing.
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
       - key: VITE_API_BASE_URL
+        # IMPORTANT: replace with your real backend URL after first deploy.
+        # Vite bakes env vars in at BUILD time — Clear Build Cache & Deploy
+        # after changing this value.
         value: https://edunova-backend.onrender.com/api/v1
 
 databases:

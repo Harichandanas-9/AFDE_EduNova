@@ -1,34 +1,36 @@
-# EduNova AI - Backend Requirements
-# Core web framework
-fastapi==0.115.0
-uvicorn[standard]==0.32.0
-python-multipart==0.0.12
+# EduNova AI - Backend Requirements (LEAN, Render-friendly)
+# Tested with Python 3.10, 3.11, 3.12, 3.13.
+#
+# This file deliberately omits the heavy AI deps (langgraph, langchain, deepeval).
+# The application has built-in fallbacks for both — see app/agents/workflow.py
+# (sequential runner) and app/evaluation/deepeval_evaluator.py (heuristic).
+#
+# If you want the FULL stack with real LangGraph + DeepEval, additionally:
+#     pip install -r requirements-full.txt
 
-# Data & validation
-pydantic>=2.10
-pydantic-settings>=2.6.1
-email-validator==2.2.0
+# --- Core web framework ---
+fastapi>=0.115.0,<0.116
+uvicorn[standard]>=0.32.0,<0.33
+python-multipart>=0.0.12
 
-# Database
-sqlalchemy==2.0.35
-aiosqlite==0.20.0
-asyncpg==0.29.0
-psycopg2-binary==2.9.9
+# --- Data & validation ---
+pydantic>=2.9.2,<3.0
+pydantic-settings>=2.5.2,<3.0
+email-validator>=2.2.0
 
-# AI / LLM stack
-langgraph==0.2.34
-langchain==0.3.3
-langchain-core==0.3.10
-openai==1.51.2
-google-generativeai==0.8.3
+# --- Database (async only — no psycopg2 needed) ---
+sqlalchemy>=2.0.35,<3.0
+aiosqlite>=0.20.0           # SQLite async driver (dev fallback)
+asyncpg>=0.29.0             # PostgreSQL async driver (prod / Render)
 
-# Evaluation
-deepeval==1.4.5
+# --- LLM providers (light SDKs, both optional at runtime) ---
+openai>=1.51.2
+google-generativeai>=0.8.3
 
-# Auth-ready (JWT) — wired but not enforced by default
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
+# --- Auth-ready (JWT) ---
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
 
-# Networking / utilities
-httpx==0.27.2
-python-dotenv==1.0.1
+# --- Networking / utilities ---
+httpx>=0.27.2
+python-dotenv>=1.0.1

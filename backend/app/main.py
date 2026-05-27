@@ -35,7 +35,10 @@ logger = get_logger("edunova.main")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown hooks."""
-    logger.info("Starting %s v%s in %s mode", settings.APP_NAME, settings.APP_VERSION, settings.ENVIRONMENT)
+    logger.info(
+        "Starting %s v%s in %s mode",
+        settings.APP_NAME, settings.APP_VERSION, settings.ENVIRONMENT,
+    )
     await init_db()
     logger.info("Application started successfully.")
     yield
@@ -47,21 +50,36 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
-        description="EduNova AI — Your AI Career & Learning Copilot",
+        description="EduNova AI - Your AI Career & Learning Copilot",
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
         lifespan=lifespan,
     )
 
-    # --- Middleware ---
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS + ["*"] if settings.DEBUG else settings.CORS_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    # --- CORS middleware ---
+    # In DEBUG mode we use a regex that matches localhost on any port so dev
+    # is friction-free. In production we honour the configured CORS_ORIGINS
+    # list exactly. We never mix "*" with allow_credentials=True (browsers
+    # silently reject that combination).
+    if settings.DEBUG:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    else:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.CORS_ORIGINS,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+    # Other middleware (order matters — outermost last)
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(RateLimitMiddleware)
 

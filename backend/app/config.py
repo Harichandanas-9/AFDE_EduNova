@@ -6,11 +6,11 @@ sensible defaults. Never hardcode secrets in source code.
 """
 from __future__ import annotations
 
-import os
+import json
 from functools import lru_cache
 from typing import List, Optional
 
-from pydantic import Field
+from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,18 +36,41 @@ class Settings(BaseSettings):
     PORT: int = Field(default=8000)
 
     # --- Security ---
-    SECRET_KEY: str = Field(default="change-me-in-production-please-use-a-strong-key")
+    SECRET_KEY: str = Field(
+        default="change-me-in-production-please-use-a-strong-key",
+    )
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
     # --- CORS ---
-    CORS_ORIGINS: List[str] = Field(
-        default=[
-            "http://localhost:5173",
-            "http://localhost:3000",
-            "http://127.0.0.1:5173",
-        ]
+    # Stored as a raw string to avoid pydantic-settings' auto-JSON-decoding
+    # of complex (list) types from environment variables. The `CORS_ORIGINS`
+    # property below parses both JSON and comma-separated forms.
+    #
+    # Examples that all work:
+    #   CORS_ORIGINS='["https://a.com","https://b.com"]'
+    #   CORS_ORIGINS='https://a.com,https://b.com'
+    #   CORS_ORIGINS='https://a.com'
+    CORS_ORIGINS_RAW: str = Field(
+        default='["http://localhost:5173","http://localhost:3000","http://127.0.0.1:5173"]',
+        alias="CORS_ORIGINS",
     )
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def CORS_ORIGINS(self) -> List[str]:
+        v = (self.CORS_ORIGINS_RAW or "").strip()
+        if not v:
+            return []
+        if v.startswith("["):
+            try:
+                parsed = json.loads(v)
+                if isinstance(parsed, list):
+                    return [str(x) for x in parsed]
+            except Exception:
+                pass
+        # Fallback: comma-separated
+        return [item.strip() for item in v.split(",") if item.strip()]
 
     # --- Database ---
     DATABASE_URL: str = Field(default="sqlite+aiosqlite:///./edunova.db")
@@ -58,7 +81,7 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-4o-mini"
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "gemini-1.5-flash"
-    LLM_PROVIDER: str = Field(default="openai")  # "openai" | "gemini" | "mock"
+    LLM_PROVIDER: str = Field(default="mock")  # "openai" | "gemini" | "mock"
     LLM_TEMPERATURE: float = 0.4
     LLM_MAX_TOKENS: int = 1500
 

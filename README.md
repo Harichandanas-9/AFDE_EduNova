@@ -90,6 +90,9 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -r requirements.txt
+# If that's slow or any package fails to build on your machine,
+# use the lean install (LangGraph/DeepEval are optional — the app has fallbacks):
+#   pip install -r requirements-minimal.txt
 cp .env.example .env       # (Windows) copy .env.example .env
 
 uvicorn app.main:app --reload

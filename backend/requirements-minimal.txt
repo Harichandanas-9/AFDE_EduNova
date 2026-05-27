@@ -1,0 +1,17 @@
+# Lean install — boots the API end-to-end without LangGraph / DeepEval.
+# The app's workflow has built-in fallbacks for both, so every feature
+# still works; the mock LLM provider is used by default.
+#
+# Use this if `requirements.txt` is too slow/heavy on your machine:
+#     pip install -r requirements-minimal.txt
+
+fastapi>=0.115.0,<0.116
+uvicorn[standard]>=0.32.0,<0.33
+python-multipart>=0.0.12
+pydantic>=2.9.2,<3.0
+pydantic-settings>=2.5.2,<3.0
+email-validator>=2.2.0
+sqlalchemy>=2.0.35,<3.0
+aiosqlite>=0.20.0
+httpx>=0.27.2
+python-dotenv>=1.0.1

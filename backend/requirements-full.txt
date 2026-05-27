@@ -1,0 +1,17 @@
+# Optional heavy AI stack — install ONLY if you want the real LangGraph
+# workflow engine and DeepEval evaluator. The app works fine without these
+# (it falls back to a built-in sequential runner and a heuristic evaluator).
+#
+# Not recommended on Render free tier — these pull in torch + ML deps and
+# may exceed free-tier memory/build limits.
+#
+#     pip install -r requirements.txt
+#     pip install -r requirements-full.txt
+
+# --- LangGraph multi-agent orchestrator ---
+langgraph>=0.2.34,<0.3
+langchain>=0.3.3,<0.4
+langchain-core>=0.3.10,<0.4
+
+# --- DeepEval response evaluator ---
+deepeval>=1.4.5
