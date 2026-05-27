@@ -1,0 +1,61 @@
+services:
+  # ----------------------- Backend (FastAPI) -----------------------
+  - type: web
+    name: edunova-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: LLM_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: edunova-db
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: '["https://edunova-frontend.onrender.com","http://localhost:5173"]'
+      - key: DEEPEVAL_ENABLED
+        value: "true"
+      - key: DEEPEVAL_THRESHOLD
+        value: "0.6"
+
+  # ----------------------- Frontend (Vite static) -----------------------
+  - type: web
+    name: edunova-frontend
+    runtime: static
+    rootDir: frontend
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    pullRequestPreviewsEnabled: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://edunova-backend.onrender.com/api/v1
+
+databases:
+  - name: edunova-db
+    plan: free
+    databaseName: edunova
+    user: edunova
