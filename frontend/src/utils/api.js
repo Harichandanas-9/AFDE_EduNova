@@ -1,7 +1,17 @@
 import axios from 'axios'
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || '/api/v1'
+// In production builds VITE_API_BASE_URL MUST be set to the backend URL.
+// In dev, falling back to '/api/v1' lets Vite's proxy forward to localhost:8000.
+const ENV_URL = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL = ENV_URL || '/api/v1'
+
+if (import.meta.env.PROD && !ENV_URL) {
+  // eslint-disable-next-line no-console
+  console.error(
+    '[EduNova] VITE_API_BASE_URL is not set. API calls will fail. ' +
+    'Set it in your hosting provider env and rebuild with cache cleared.'
+  )
+}
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

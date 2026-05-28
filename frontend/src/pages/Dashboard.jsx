@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Sparkles, BookOpenCheck, CalendarRange, FileText, Target, Flame, TrendingUp, Activity,
 } from 'lucide-react'
@@ -138,7 +139,7 @@ export default function Dashboard() {
         ].map((card, i) => {
           const Icon = card.icon
           return (
-            <a key={card.title} href={card.to}>
+            <Link key={card.title} to={card.to}>
               <GlassCard delay={i * 0.05}>
                 <div className={`w-10 h-10 rounded-xl ${card.accent} flex items-center justify-center mb-3`}>
                   <Icon className="w-5 h-5 text-white" />
@@ -146,7 +147,7 @@ export default function Dashboard() {
                 <div className="font-bold">{card.title}</div>
                 <div className="text-xs text-slate-500">{card.desc}</div>
               </GlassCard>
-            </a>
+            </Link>
           )
         })}
       </div>
